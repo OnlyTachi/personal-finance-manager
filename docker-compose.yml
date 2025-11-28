@@ -1,0 +1,30 @@
+services:
+  # Serviço do Backend Python
+  backend:
+    build: ./backend
+    container_name: investimento_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Isso espelha sua pasta backend para dentro do container
+      # Assim, quando você edita o código no Linux Mint, o container atualiza (Hot Reload)
+      - ./backend:/app
+    # Persistência do Banco de Dados SQLite:
+    # O arquivo .db precisa ser persistido ou será apagado ao reiniciar o container
+    environment:
+      - DATABASE_URL=sqlite:////app/investimentos.db
+
+  # Serviço do Frontend React
+  frontend:
+    build: ./frontend
+    container_name: investimento_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # Truque importante: impede que o node_modules de dentro do container
+      # seja sobrescrito pelo da sua máquina local (que pode ser incompatível ou vazio)
+      - /app/node_modules
+    # Garante que o frontend só inicie depois do backend (opcional, mas boa prática)
+    depends_on:
+      - backend

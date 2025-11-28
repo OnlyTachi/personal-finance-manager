@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+pydantic-settings
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==3.2.0
+python-multipart
+pandas
+numpy
+python-bcb
+yfinance
+requests
