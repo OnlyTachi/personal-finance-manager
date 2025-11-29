@@ -24,7 +24,7 @@ Diferente de planilhas comuns, este sistema utiliza **lógica FIFO** para cálcu
 ### 📸 Screenshots
 
 <div align="center">
-<img src="dash.png" alt="Dashboard Preview" width="100%">
+<img src="inicio.png" alt="Dashboard Preview" width="100%">
 </div>
 
 ---
