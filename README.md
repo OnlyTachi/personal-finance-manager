@@ -24,7 +24,7 @@ Diferente de planilhas comuns, este sistema utiliza **lógica FIFO** para cálcu
 ### 📸 Screenshots
 
 <div align="center">
-  <em>(Adicione prints do seu sistema aqui)</em>
+<img src="dash.png" alt="Dashboard Preview" width="100%">
 </div>
 
 ---
@@ -145,6 +145,6 @@ Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](https://www.
 
 ---
 
-\<div align="center"\>
-Feito com 💜 por \<a href="https://www.google.com/search?q=https://github.com/OnlyTachi"\>OnlyTachi\</a\>
-\</div\>
+<div align="center">
+Feito com 💜 por <a href="https://www.google.com/search?q=https://github.com/OnlyTachi">OnlyTachi</a>
+</div>
