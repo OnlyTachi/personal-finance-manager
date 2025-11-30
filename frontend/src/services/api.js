@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://192.168.0.46:8000/api/v1",
+  baseURL: "http://192.168.1.101:8000/api/v1",
 });
 
 export const investmentsService = {
@@ -62,8 +62,10 @@ export const investmentsService = {
     const response = await api.post("/investments/assets/refresh");
     return response.data;
   },
+
+  // --- Históricos ---
   getHistory: async () => {
-    const response = await api.get("/investments/history");
+    const response = await api.get("/history/");
     return response.data;
   },
 
@@ -80,7 +82,7 @@ export const investmentsService = {
     return response.data;
   },
 
-  // --- Passivos (Dívidas) ---
+  // --- Passivos ---
   getPassivos: async () => {
     const response = await api.get("/investments/passivos");
     return response.data;

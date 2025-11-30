@@ -38,7 +38,7 @@ class Transacao(Base):
     id = Column(String, primary_key=True, default=generate_uuid)
     ativo_id = Column(String, ForeignKey("ativos.id"))
     timestamp = Column(DateTime, default=datetime.now)
-    tipo = Column(String)  # Aporte, Saque
+    tipo = Column(String)
     valor = Column(Float)
     quantidade = Column(Float, default=0.0)
 
@@ -50,24 +50,16 @@ class Transacao(Base):
     ativo = relationship("Ativo", back_populates="transacoes")
 
 
-class Snapshot(Base):
-    __tablename__ = "snapshots"
-    id = Column(Integer, primary_key=True, index=True)
-    owner_id = Column(String, ForeignKey("users.username"))
-    timestamp = Column(DateTime, default=datetime.now)
-    valor_total_bruto = Column(Float)
-
-
 class Passivo(Base):
     __tablename__ = "passivos"
     id = Column(String, primary_key=True, default=generate_uuid)
     owner_id = Column(String, ForeignKey("users.username"))
 
     nome = Column(String, nullable=False)
-    tipo = Column(String)  # Financiamento, Empréstimo, Cartão
+    tipo = Column(String)
 
-    valor_original = Column(Float)  # Valor tomado emprestado
-    saldo_devedor = Column(Float)  # Quanto falta pagar
+    valor_original = Column(Float)
+    saldo_devedor = Column(Float)
 
     taxa_juros_anual = Column(Float, default=0.0)
     prazo_meses = Column(Integer, default=0)

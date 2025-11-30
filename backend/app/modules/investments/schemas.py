@@ -20,6 +20,13 @@ class TransacaoCreate(TransacaoBase):
     ativo_id: str
 
 
+class TransacaoUpdate(BaseModel):
+    valor: Optional[float] = None
+    quantidade: Optional[float] = None
+    timestamp: Optional[datetime] = None
+    tipo: Optional[str] = None
+
+
 class Transacao(TransacaoBase):
     id: str
 
@@ -40,6 +47,15 @@ class AtivoBase(BaseModel):
 class AtivoCreate(AtivoBase):
     valor_inicial: float
     data_inicio: Optional[datetime] = None
+
+
+class AtivoUpdate(BaseModel):
+    nome: Optional[str] = None
+    categoria: Optional[str] = None
+    tipo_indexador: Optional[str] = None
+    valor_taxa: Optional[float] = None
+    ticker: Optional[str] = None
+    status: Optional[str] = None
 
 
 class Ativo(AtivoBase):

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { investmentsService } from '../services/api';
-import { ArrowLeft, Calendar, ArrowDownCircle, ArrowUpCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, ArrowDownCircle, ArrowUpCircle, Trash2, Pencil, Save, X } from 'lucide-react';
 
 export default function AssetDetailsPage() {
   const { id } = useParams();
@@ -9,16 +9,27 @@ export default function AssetDetailsPage() {
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   
+  // Modais de Transação (Criar)
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('Aporte'); 
   const [simulation, setSimulation] = useState(null);
   const [formData, setFormData] = useState({ valor: '', quantidade: '', data: '' });
+  
+  // Modal de Edição de Transação
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editForm, setEditForm] = useState({ valor: '', quantidade: '', data: '' });
+
+  // Modal de Edição de Ativo
+  const [editingAsset, setEditingAsset] = useState(false);
+  const [assetForm, setAssetForm] = useState({ nome: '', categoria: '', ticker: '' });
+
   const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchAsset = async () => {
     try {
       const data = await investmentsService.getAssetById(id);
       setAsset(data);
+      setAssetForm({ nome: data.nome, categoria: data.categoria, ticker: data.ticker || '' });
     } catch (error) {
       console.error("Erro", error);
     } finally {
@@ -30,11 +41,40 @@ export default function AssetDetailsPage() {
 
   const resetModal = () => {
     setShowModal(false);
+    setEditingTransaction(null);
+    setEditingAsset(false);
     setFormData({ valor: '', quantidade: '', data: '' });
     setSimulation(null);
     setIsProcessing(false);
   };
 
+  // --- AÇÕES DE ATIVO ---
+  const handleUpdateAsset = async (e) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    try {
+        await investmentsService.updateAsset(id, assetForm);
+        setEditingAsset(false);
+        fetchAsset();
+    } catch (error) {
+        alert("Erro ao atualizar ativo.");
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
+  const handleDeleteAsset = async () => {
+    if (confirm("ATENÇÃO: Isso excluirá o ativo e TODO o histórico dele. Não há volta.")) {
+      try {
+        await investmentsService.deleteAsset(id);
+        navigate('/dashboard');
+      } catch (error) {
+        alert("Erro ao excluir ativo.");
+      }
+    }
+  };
+
+  // --- AÇÕES DE TRANSAÇÃO ---
   const handleSimulate = async () => {
     if (!formData.valor) return;
     setIsProcessing(true);
@@ -51,7 +91,7 @@ export default function AssetDetailsPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmitTransaction = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
     try {
@@ -82,6 +122,34 @@ export default function AssetDetailsPage() {
     }
   };
 
+  const handleEditTransaction = (t) => {
+    setEditingTransaction(t);
+    setEditForm({
+        valor: t.valor,
+        quantidade: t.quantidade || '',
+        data: t.timestamp.split('T')[0] // Formata para o input date YYYY-MM-DD
+    });
+  };
+
+  const handleUpdateTransaction = async (e) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    try {
+        const payload = {
+            valor: parseFloat(editForm.valor),
+            quantidade: editForm.quantidade ? parseFloat(editForm.quantidade) : 0,
+            timestamp: new Date(editForm.data).toISOString()
+        };
+        await investmentsService.updateTransaction(editingTransaction.id, payload);
+        resetModal();
+        fetchAsset();
+    } catch (error) {
+        alert("Erro ao atualizar transação.");
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
   const handleDeleteTransaction = async (transacaoId) => {
     if (confirm("Tem certeza? Isso irá reverter o impacto no saldo do ativo.")) {
       try {
@@ -89,17 +157,6 @@ export default function AssetDetailsPage() {
         fetchAsset();
       } catch (error) {
         alert("Erro ao excluir transação.");
-      }
-    }
-  };
-
-  const handleDeleteAsset = async () => {
-    if (confirm("ATENÇÃO: Isso excluirá o ativo e TODO o histórico dele. Não há volta.")) {
-      try {
-        await investmentsService.deleteAsset(id);
-        navigate('/dashboard');
-      } catch (error) {
-        alert("Erro ao excluir ativo.");
       }
     }
   };
@@ -116,9 +173,23 @@ export default function AssetDetailsPage() {
         <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
       </button>
 
+      {/* CABEÇALHO DO ATIVO */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white">{asset.nome}</h1>
+          {editingAsset ? (
+            <form onSubmit={handleUpdateAsset} className="flex gap-2 items-center mb-2">
+                <input autoFocus value={assetForm.nome} onChange={e=>setAssetForm({...assetForm, nome: e.target.value})} className="bg-slate-700 text-white text-2xl font-bold rounded p-1 border border-slate-500 outline-none" />
+                <button type="submit" className="text-green-400 hover:text-green-300"><Save className="w-6 h-6"/></button>
+                <button type="button" onClick={() => setEditingAsset(false)} className="text-red-400 hover:text-red-300"><X className="w-6 h-6"/></button>
+            </form>
+          ) : (
+            <h1 className="text-3xl font-bold text-white flex items-center gap-2 group">
+                {asset.nome} 
+                <button onClick={() => setEditingAsset(true)} className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-blue-400">
+                    <Pencil className="w-5 h-5"/>
+                </button>
+            </h1>
+          )}
           <p className="text-gray-400">{asset.tipo_indexador} • {asset.categoria} {asset.ticker && `• ${asset.ticker}`}</p>
         </div>
         <div className="flex gap-2">
@@ -134,6 +205,7 @@ export default function AssetDetailsPage() {
         </div>
       </div>
 
+      {/* CARDS DE RESUMO */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
           <p className="text-gray-400 text-xs uppercase">Saldo Bruto</p>
@@ -151,6 +223,7 @@ export default function AssetDetailsPage() {
         </div>
       </div>
 
+      {/* TABELA DE TRANSAÇÕES */}
       <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
         <div className="p-4 border-b border-slate-700 font-bold flex gap-2">
           <Calendar className="w-5 h-5"/> Histórico
@@ -162,7 +235,7 @@ export default function AssetDetailsPage() {
               <th className="px-6 py-3">Tipo</th>
               <th className="px-6 py-3 text-right">Valor</th>
               <th className="px-6 py-3 text-right">Imposto Pago</th>
-              <th className="px-6 py-3 text-right">Ação</th>
+              <th className="px-6 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700">
@@ -172,8 +245,11 @@ export default function AssetDetailsPage() {
                 <td className="px-6 py-3">{t.tipo}</td>
                 <td className="px-6 py-3 text-right">R$ {t.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                 <td className="px-6 py-3 text-right text-red-400">{(t.iof_pago + t.ir_pago) > 0 ? `- R$ ${(t.iof_pago + t.ir_pago).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '-'}</td>
-                <td className="px-6 py-3 text-right">
-                    <button onClick={() => handleDeleteTransaction(t.id)} className="text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100" title="Excluir Transação">
+                <td className="px-6 py-3 text-right space-x-2">
+                    <button onClick={() => handleEditTransaction(t)} className="text-blue-400 hover:text-blue-300 transition-colors opacity-0 group-hover:opacity-100" title="Editar">
+                        <Pencil className="w-4 h-4 inline" />
+                    </button>
+                    <button onClick={() => handleDeleteTransaction(t.id)} className="text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100" title="Excluir">
                         <Trash2 className="w-4 h-4 inline" />
                     </button>
                 </td>
@@ -183,12 +259,13 @@ export default function AssetDetailsPage() {
         </table>
       </div>
 
+      {/* MODAL DE CRIAÇÃO (APORTE/SAQUE) */}
       {showModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 w-full max-w-md shadow-2xl">
+          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 w-full max-w-md shadow-2xl animate-in zoom-in duration-200">
             <h2 className="text-xl font-bold mb-4 text-white">{modalType === 'Aporte' ? '💰 Novo Aporte' : '💸 Realizar Saque'}</h2>
             {(!simulation || modalType === 'Aporte') ? (
-              <form onSubmit={modalType === 'Aporte' ? handleSubmit : (e) => { e.preventDefault(); handleSimulate(); }}>
+              <form onSubmit={modalType === 'Aporte' ? handleSubmitTransaction : (e) => { e.preventDefault(); handleSimulate(); }}>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm text-gray-400 mb-1">Valor Total (R$)</label>
@@ -219,10 +296,41 @@ export default function AssetDetailsPage() {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setSimulation(null)} className="flex-1 bg-slate-700 text-white py-2 rounded">Voltar</button>
-                  <button onClick={handleSubmit} disabled={isProcessing} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded">Confirmar</button>
+                  <button onClick={handleSubmitTransaction} disabled={isProcessing} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded">Confirmar</button>
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EDIÇÃO DE TRANSAÇÃO */}
+      {editingTransaction && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 w-full max-w-md shadow-2xl animate-in zoom-in duration-200">
+            <h2 className="text-xl font-bold mb-4 text-white flex items-center gap-2"><Pencil className="w-5 h-5 text-blue-400"/> Editar Transação</h2>
+            <form onSubmit={handleUpdateTransaction}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Valor (R$)</label>
+                    <input type="number" step="0.01" required className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white" value={editForm.valor} onChange={e => setEditForm({...editForm, valor: e.target.value})} />
+                  </div>
+                  {isRV && (
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Quantidade</label>
+                      <input type="number" step="0.00000001" className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white" value={editForm.quantidade} onChange={e => setEditForm({...editForm, quantidade: e.target.value})} />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Data</label>
+                    <input type="date" required className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white" value={editForm.data} onChange={e => setEditForm({...editForm, data: e.target.value})} />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-6">
+                  <button type="button" onClick={resetModal} className="flex-1 bg-slate-700 text-white py-2 rounded">Cancelar</button>
+                  <button type="submit" disabled={isProcessing} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded">{isProcessing ? 'Salvando...' : 'Salvar Alterações'}</button>
+                </div>
+            </form>
           </div>
         </div>
       )}
