@@ -4,10 +4,48 @@ from app.modules.investments import models, schemas
 from app.modules.investments import price_service
 from datetime import date, datetime, timedelta
 import math
+import logging
 
-# Taxa CDI Atual Aproximada (11.25% ao ano?)
-# Em produção, isso deve vir de uma API ou tabela de indicadores
-CURRENT_CDI_RATE = 11.25
+# Configuração de Logger
+logger = logging.getLogger(__name__)
+
+
+def get_current_cdi_rate() -> float:
+    """
+    Busca a Meta Selic atual (código 432) diretamente do Banco Central.
+    Utiliza a biblioteca python-bcb.
+    Retorna 11.25 como fallback em caso de erro de conexão ou leitura.
+    """
+    fallback_rate = 11.25
+    try:
+        from bcb import sgs
+
+        # Código 432: Taxa de juros - Meta Selic definida pelo Copom (% a.a.)
+        df = sgs.get({"selic": 432}, last=1)
+        if not df.empty:
+            rate = float(df["selic"].iloc[-1])
+            logger.info(f"Taxa CDI/Selic atualizada automaticamente via BCB: {rate}%")
+            return rate
+    except Exception as e:
+        logger.warning(
+            f"Erro ao buscar taxa CDI no BCB (usando fallback {fallback_rate}%): {str(e)}"
+        )
+
+    return fallback_rate
+
+
+# Taxa CDI Atual Aproximada (Atualizada automaticamente na inicialização)
+CURRENT_CDI_RATE = get_current_cdi_rate()
+
+
+def update_cdi_rate_variable():
+    """Função auxiliar para o Scheduler atualizar a taxa global."""
+    global CURRENT_CDI_RATE
+    new_rate = get_current_cdi_rate()
+    if new_rate > 0:
+        CURRENT_CDI_RATE = new_rate
+        logger.info(f"Scheduler: Taxa CDI Global atualizada para {CURRENT_CDI_RATE}%")
+
 
 # Tabela regressiva de IOF (0 a 29 dias)
 TABELA_IOF = {
@@ -82,10 +120,7 @@ def calculate_future_value(
         return valor_original
 
     # Aproximação de dias úteis (5/7 dos dias corridos)
-    # Para maior precisão, utilizar biblioteca de feriados (ex: workalendar)
     dias_uteis = int(dias_corridos * (5 / 7))
-
-    # Fórmula: Valor Futuro = Valor Presente * (1 + Taxa)^(dias_uteis / 252)
     taxa_diaria = (1 + taxa_anual_efetiva / 100) ** (1 / 252) - 1
     fator = (1 + taxa_diaria) ** dias_uteis
 
@@ -126,8 +161,8 @@ def update_asset_balance(db: Session, asset: models.Ativo):
             lotes.append(
                 {
                     "data": t.timestamp,
-                    "principal_restante": t.valor,  # Valor original investido que ainda está lá
-                    "valor_atual": val_atualizado,  # Valor corrigido hoje
+                    "principal_restante": t.valor,
+                    "valor_atual": val_atualizado,
                 }
             )
         elif t.tipo == "Saque":

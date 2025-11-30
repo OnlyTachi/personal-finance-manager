@@ -7,7 +7,8 @@ import CalculatorPage from './pages/Calculator';
 import DashboardPage from './pages/Dashboard';
 import AddAssetPage from './pages/AddAsset';
 import AssetDetailsPage from './pages/AssetDetails';
-import PassivosPage from './pages/Passivos'; // Nova Página
+import PassivosPage from './pages/Passivos';
+import PassivoDetailsPage from './pages/PassivoDetails'; // Import Novo
 import LoginPage from './pages/Login';
 import HelpPage from './pages/Help';
 import HistoryPage from './pages/History';
@@ -47,7 +48,7 @@ function AppContent() {
           <div className="flex items-center gap-6">
             <div className="flex gap-4">
               <NavLink to="/">Dashboard</NavLink>
-              <NavLink to="/passivos">Dívidas</NavLink> {/* Link Novo */}
+              <NavLink to="/passivos">Dívidas</NavLink>
               <NavLink to="/calculator">Calculadora</NavLink>
               <NavLink to="/history">Histórico</NavLink>
               <NavLink to="/help">Ajuda</NavLink>
@@ -65,7 +66,8 @@ function AppContent() {
           <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
           <Route path="/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
           <Route path="/calculator" element={<PrivateRoute><CalculatorPage /></PrivateRoute>} />
-          <Route path="/passivos" element={<PrivateRoute><PassivosPage /></PrivateRoute>} /> {/* Rota Nova */}
+          <Route path="/passivos" element={<PrivateRoute><PassivosPage /></PrivateRoute>} />
+          <Route path="/passivos/:id" element={<PrivateRoute><PassivoDetailsPage /></PrivateRoute>} /> {/* Rota Nova */}
           <Route path="/dashboard" element={<Navigate to="/" replace />} /> 
           <Route path="/add-investment" element={<PrivateRoute><AddAssetPage /></PrivateRoute>} />
           <Route path="/asset/:id" element={<PrivateRoute><AssetDetailsPage /></PrivateRoute>} />

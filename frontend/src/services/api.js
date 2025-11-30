@@ -54,6 +54,7 @@ export const investmentsService = {
     const response = await api.post("/investments/assets", assetData);
     return response.data;
   },
+  updateAsset: async (id, data) => {},
   deleteAsset: async (id) => {
     const response = await api.delete(`/investments/assets/${id}`);
     return response.data;
@@ -77,14 +78,21 @@ export const investmentsService = {
     );
     return response.data;
   },
+  updateTransaction: async (id, data) => {
+    // Placeholder
+  },
   deleteTransaction: async (id) => {
     const response = await api.delete(`/investments/transactions/${id}`);
     return response.data;
   },
 
-  // --- Passivos ---
+  // --- Passivos (Dívidas) ---
   getPassivos: async () => {
     const response = await api.get("/investments/passivos");
+    return response.data;
+  },
+  getPassivoById: async (id) => {
+    const response = await api.get(`/investments/passivos/${id}`);
     return response.data;
   },
   createPassivo: async (data) => {
@@ -93,6 +101,12 @@ export const investmentsService = {
   },
   deletePassivo: async (id) => {
     const response = await api.delete(`/investments/passivos/${id}`);
+    return response.data;
+  },
+  toggleParcela: async (passivoId, parcelaId) => {
+    const response = await api.post(
+      `/investments/passivos/${passivoId}/parcelas/${parcelaId}/toggle`
+    );
     return response.data;
   },
 };

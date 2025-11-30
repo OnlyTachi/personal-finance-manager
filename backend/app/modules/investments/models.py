@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Integer, Boolean
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 import uuid
@@ -67,3 +67,23 @@ class Passivo(Base):
 
     data_inicio = Column(DateTime, default=datetime.now)
     status = Column(String, default="Ativo")
+
+    # Relacionamento com as parcelas
+    parcelas = relationship(
+        "Parcela", back_populates="passivo", cascade="all, delete-orphan"
+    )
+
+
+class Parcela(Base):
+    __tablename__ = "parcelas"
+    id = Column(String, primary_key=True, default=generate_uuid)
+    passivo_id = Column(String, ForeignKey("passivos.id"))
+
+    numero = Column(Integer)  # 1, 2, 3...
+    data_vencimento = Column(DateTime)
+    valor = Column(Float)
+
+    status = Column(String, default="Pendente")  # Pendente, Pago
+    data_pagamento = Column(DateTime, nullable=True)
+
+    passivo = relationship("Passivo", back_populates="parcelas")

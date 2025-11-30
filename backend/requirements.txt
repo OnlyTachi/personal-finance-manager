@@ -13,3 +13,4 @@ python-bcb
 yfinance
 requests
 alembic
+APScheduler==3.10.4

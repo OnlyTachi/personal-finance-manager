@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { investmentsService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, PlusCircle, Trash2, CreditCard, Landmark, Percent } from 'lucide-react';
+import { ArrowLeft, PlusCircle, CreditCard, Landmark, Percent } from 'lucide-react';
 
 export default function PassivosPage() {
   const navigate = useNavigate();
@@ -27,13 +27,6 @@ export default function PassivosPage() {
       console.error(error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (confirm("Tem certeza que deseja apagar essa dívida?")) {
-      await investmentsService.deletePassivo(id);
-      fetchPassivos();
     }
   };
 
@@ -77,15 +70,16 @@ export default function PassivosPage() {
       {loading ? <p className="text-center text-gray-500">Carregando...</p> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {passivos.map(p => (
-            <div key={p.id} className="bg-surface p-6 rounded-xl border border-red-900/30 shadow-lg relative group">
-              <button onClick={() => handleDelete(p.id)} className="absolute top-4 right-4 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Trash2 className="w-5 h-5" />
-              </button>
+            <div 
+                key={p.id} 
+                onClick={() => navigate(`/passivos/${p.id}`)}
+                className="bg-surface p-6 rounded-xl border border-red-900/30 shadow-lg relative group cursor-pointer hover:border-red-500/50 transition-all hover:shadow-xl"
+            >
               
               <div className="flex items-start gap-3 mb-4">
                 <div className="bg-red-900/20 p-3 rounded-lg"><Landmark className="w-6 h-6 text-red-500" /></div>
                 <div>
-                  <h3 className="font-bold text-lg text-white">{p.nome}</h3>
+                  <h3 className="font-bold text-lg text-white group-hover:text-red-400 transition-colors">{p.nome}</h3>
                   <span className="text-xs bg-slate-700 px-2 py-1 rounded text-gray-300">{p.tipo}</span>
                 </div>
               </div>
@@ -94,10 +88,6 @@ export default function PassivosPage() {
                 <div className="flex justify-between border-b border-slate-700 pb-2">
                   <span className="text-gray-400">Saldo Devedor</span>
                   <span className="font-bold text-red-400">R$ {p.saldo_devedor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Original</span>
-                  <span>R$ {p.valor_original.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Taxa Juros</span>
@@ -111,6 +101,9 @@ export default function PassivosPage() {
                   <span className="text-gray-400">Parcela Est.</span>
                   <span>R$ {p.valor_parcela.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
                 </div>
+              </div>
+              <div className="mt-4 text-center text-xs text-gray-500 group-hover:text-white transition-colors">
+                Clique para gerenciar parcelas →
               </div>
             </div>
           ))}

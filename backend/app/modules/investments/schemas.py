@@ -69,6 +69,23 @@ class Ativo(AtivoBase):
         from_attributes = True
 
 
+# --- Schemas para Parcelas) ---
+class ParcelaBase(BaseModel):
+    numero: int
+    data_vencimento: datetime
+    valor: float
+    status: str
+    data_pagamento: Optional[datetime] = None
+
+
+class Parcela(ParcelaBase):
+    id: str
+    passivo_id: str
+
+    class Config:
+        from_attributes = True
+
+
 # --- Schemas para Passivo (Dívidas) ---
 class PassivoBase(BaseModel):
     nome: str
@@ -88,6 +105,7 @@ class PassivoCreate(PassivoBase):
 class Passivo(PassivoBase):
     id: str
     status: str
+    parcelas: List[Parcela] = []
 
     class Config:
         from_attributes = True

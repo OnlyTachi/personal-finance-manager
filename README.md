@@ -31,6 +31,12 @@ Diferente de planilhas comuns, este sistema utiliza **lógica FIFO** para cálcu
 
 ## ✨ Funcionalidades Principais
 
+### 🤖 Automação Inteligente (Novo)
+
+- **Scheduler Integrado:** O sistema roda tarefas em segundo plano automaticamente (09:00 e 18:00).
+- **Auto-Correção do CDI:** Monitora o Banco Central e atualiza a taxa Selic/CDI globalmente assim que o Copom define uma nova meta.
+- **Cotações em Background:** Atualiza preços de Ações e Criptos duas vezes ao dia, mantendo seu histórico de evolução patrimonial sempre preciso sem intervenção manual.
+
 ### 📊 Dashboard Consolidado
 
 - Visão clara de **Ativos vs. Passivos** (Dívidas) = Patrimônio Líquido.
@@ -59,13 +65,14 @@ Diferente de planilhas comuns, este sistema utiliza **lógica FIFO** para cálcu
 
 ### Backend
 
-| Tech                      | Descrição                                            |
-| :------------------------ | :--------------------------------------------------- |
-| **Python 3.12 + FastAPI** | Performance assíncrona e tipagem forte.              |
-| **SQLAlchemy**            | ORM robusto para gestão do banco de dados SQLite.    |
-| **Pandas / Numpy**        | Cálculos financeiros complexos e vetorizados.        |
-| **yFinance & CoinGecko**  | Cotações de B3, Stocks (USA) e Cripto em tempo real. |
-| **JWT Auth**              | Sistema seguro de autenticação e proteção de rotas.  |
+| Tech                      | Descrição                                           |
+| :------------------------ | :-------------------------------------------------- |
+| **Python 3.12 + FastAPI** | Performance assíncrona e tipagem forte.             |
+| **APScheduler**           | Agendamento de tarefas complexas em background.     |
+| **SQLAlchemy**            | ORM robusto para gestão do banco de dados SQLite.   |
+| **Pandas / Numpy**        | Cálculos financeiros complexos e vetorizados.       |
+| **Integrações**           | Yahoo Finance, CoinGecko e Banco Central (SGS).     |
+| **JWT Auth**              | Sistema seguro de autenticação e proteção de rotas. |
 
 ### Frontend
 
@@ -92,24 +99,23 @@ Diferente de planilhas comuns, este sistema utiliza **lógica FIFO** para cálcu
 
 1. **Clone o repositório:**
 
-   ```bash
+```bash
    git clone [https://github.com/OnlyTachi/personal-finance-manager.git](https://github.com/OnlyTachi/personal-finance-manager.git)
    cd personal-finance-manager
+```
 
-   ```
+2.  **Execute o container:**
 
-2. **Execute o container:**
+```bash
+    docker-compose up --build
+```
 
-   ```bash
-   docker-compose up --build
-   ```
+3.  **Acesse a aplicação:**
 
-3. **Acesse a aplicação:**
+    - 📱 Frontend: `http://localhost:5173`
+    - ⚙️ Backend API Docs: `http://localhost:8000/docs`
 
-   - 📱 Frontend: `http://localhost:5173`
-   - ⚙️ Backend API Docs: `http://localhost:8000/docs`
-
-## Instalaçao manual
+### Instalação Manual
 
 #### Backend
 
@@ -145,6 +151,6 @@ Este projeto está sob a licença MIT. Consulte o arquivo [LICENSE](https://www.
 
 ---
 
-<div align="center">
-Feito com 💜 por <a href="https://www.google.com/search?q=https://github.com/OnlyTachi">OnlyTachi</a>
-</div>
+\<div align="center"\>
+Feito com 💜 por \<a href="https://www.google.com/search?q=https://github.com/OnlyTachi"\>OnlyTachi\</a\>
+\</div\>

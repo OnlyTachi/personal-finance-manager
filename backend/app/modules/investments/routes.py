@@ -66,8 +66,6 @@ def create_asset(
         db.add(t)
         db.commit()
         service.update_asset_balance(db, new_asset)
-
-        # Atualiza histórico após criar ativo com aporte inicial
         background_tasks.add_task(
             history_service.rebuild_user_history, db, current_user.username
         )
@@ -86,12 +84,9 @@ def delete_asset_route(
     if not asset or asset.owner_id != current_user.username:
         raise HTTPException(status_code=403, detail="Acesso negado")
     service.delete_asset(db, asset_id)
-
-    # Atualiza histórico após deletar
     background_tasks.add_task(
         history_service.rebuild_user_history, db, current_user.username
     )
-
     return {"message": "Ativo excluído"}
 
 
@@ -108,14 +103,10 @@ def create_transaction(
     asset = service.get_asset_by_id(db, transaction_in.ativo_id)
     if not asset or asset.owner_id != current_user.username:
         raise HTTPException(status_code=403, detail="Acesso negado")
-
     tx = service.create_transaction(db, transaction_in)
-
-    # Atualiza histórico quando cria transação
     background_tasks.add_task(
         history_service.rebuild_user_history, db, current_user.username
     )
-
     return tx
 
 
@@ -132,14 +123,10 @@ def delete_transaction_route(
     asset = service.get_asset_by_id(db, t.ativo_id)
     if not asset or asset.owner_id != current_user.username:
         raise HTTPException(status_code=403)
-
     res = service.delete_transaction(db, transaction_id)
-
-    # Atualiza histórico quando deleta transação
     background_tasks.add_task(
         history_service.rebuild_user_history, db, current_user.username
     )
-
     return res
 
 
@@ -156,6 +143,9 @@ def simulate_withdrawal(
     return service.simulate_withdrawal_fifo(db, ativo_id, valor)
 
 
+# --- PASSIVOS (DÍVIDAS) ---
+
+
 @router.get("/passivos", response_model=List[schemas.Passivo])
 def list_passivos(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
@@ -167,18 +157,34 @@ def list_passivos(
     )
 
 
+@router.get("/passivos/{passivo_id}", response_model=schemas.Passivo)
+def get_passivo(
+    passivo_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    p = (
+        db.query(models.Passivo)
+        .filter(
+            models.Passivo.id == passivo_id,
+            models.Passivo.owner_id == current_user.username,
+        )
+        .first()
+    )
+    if not p:
+        raise HTTPException(status_code=404, detail="Passivo não encontrado")
+    return p
+
+
 @router.post("/passivos", response_model=schemas.Passivo)
 def create_passivo(
     passivo_in: schemas.PassivoCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    new_passivo = models.Passivo(**passivo_in.model_dump())
-    new_passivo.owner_id = current_user.username
-    db.add(new_passivo)
-    db.commit()
-    db.refresh(new_passivo)
-    return new_passivo
+    return service.create_passivo_with_installments(
+        db, passivo_in, current_user.username
+    )
 
 
 @router.delete("/passivos/{passivo_id}")
@@ -195,11 +201,31 @@ def delete_passivo(
     return {"message": "Passivo excluído"}
 
 
+@router.post(
+    "/passivos/{passivo_id}/parcelas/{parcela_id}/toggle",
+    response_model=schemas.Passivo,
+)
+def toggle_parcela(
+    passivo_id: str,
+    parcela_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        return service.toggle_parcela_payment(
+            db, passivo_id, parcela_id, current_user.username
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# --- GERAL ---
+
+
 @router.post("/assets/refresh")
 def refresh_prices(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-    # Quando atualiza preços, o valor de "hoje" muda, mas o histórico passado se mantm no custo
     res = service.refresh_all_assets_prices(db)
     history_service.rebuild_user_history(db, current_user.username)
     return res
